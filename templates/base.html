@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · vibe-dispatch</title>
+  <link rel="stylesheet" href="static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <nav class="container" aria-label="主导航">
+      <ul>
+        {% for name, label in pages %}
+        <li><a href="{{ name }}.html"{% if current_page == name %} aria-current="page"{% endif %}>{{ label }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <p><a href="https://github.com/alezhao/vibe-dispatch">vibe-dispatch · GitHub</a></p>
+    </div>
+  </footer>
+</body>
+</html>
