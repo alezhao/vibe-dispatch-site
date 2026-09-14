@@ -79,7 +79,7 @@
 | E-6 | 维护者读工作流 | 部署 job 的 environment 为 `github-pages` | auto | `test_pages_workflow.py::test_deploy_job_has_pages_environment` |
 | E-7 | 访客访问线上地址 | https://alezhao.github.io/vibe-dispatch-site/ 及四页、`static/style.css` 均 200 | manual | 合并后 `gh run list` 成功；curl 五个 URL — 2026-09-14 已确认 ✅ |
 
-## 里程碑 F：视觉设计（开发者工具风 · 深色 · 自托管字体）（VIB-12 🔴）
+## 里程碑 F：视觉设计（开发者工具风 · 深色 · 自托管字体）（VIB-12 ✅ PR #6）
 
 设计方向：开发者工具风（深色为主、等宽字体点缀、代码块突出），只做深色主题，自托管 Inter（正文）与 JetBrains Mono（代码），零 JS、零外部请求。字体文件与许可证已放在 `static/fonts/`。
 
@@ -96,6 +96,6 @@
 | F-9 | 键盘用户 | 存在 `:focus-visible` 规则并设置 `outline` | auto | `test_design.py::test_focus_visible_outline` |
 | F-10 | 访客用手机 | 至少一个 `@media (max-width: …)` 断点；首页 `.features` 为 `display: grid` 并用 `auto-fit` / `minmax` 自适应列数 | auto | `test_design.py::test_responsive_layout_rules` |
 | F-11 | 内容不受影响 | A–E 全部 `auto` 条目仍绿（F 只能改 `static/style.css`、`templates/base.html`、`static/fonts/`，各页模板只允许加 class / 结构包裹，不改文字）；每页仍只引用一份 `static/style.css`，不得另开样式表绕过 token 检查 | auto | 全量 `pytest -q`；`test_design.py::test_every_page_links_same_stylesheet_only` |
-| F-12 | dev lead 复核观感 | 1280px 与 390px 宽度截图：无横向滚动、导航可点、hero / 卡片 / 代码块层次清晰、字体确实为 Inter / JetBrains Mono（DevTools 检查 rendered fonts） | manual | 复核时截图贴在 VIB-12 评论 ⬜ |
-| F-13 | 访客在线访问 | Pages 部署成功后线上样式生效（`static/fonts/*.woff2` 200） | manual | 合并后 curl ⬜ |
+| F-12 | dev lead 复核观感 | 1280px 与 390px 宽度截图：无横向滚动、导航可点、hero / 卡片 / 代码块层次清晰、字体确实为 Inter / JetBrains Mono（DevTools 检查 rendered fonts） | manual | 2026-09-14 复核两轮：第一轮打回（行内 code 词中折行，见 F-14）；第二轮 `ef09983` 通过——390 / 1280 均无横向滚动，`.features` 三列，`document.fonts.check` 确认 Inter 与 JetBrains Mono 已加载 ✅ |
+| F-13 | 访客在线访问 | Pages 部署成功后线上样式生效（`static/fonts/*.woff2` 200） | manual | 2026-09-14 Pages run `bcff0a4` success；`/`、`static/style.css`、`static/fonts/*.woff2` 均 200，HTML 含 `color-scheme=dark` 与字体 preload ✅ |
 | F-14 | 访客在窄屏读 CLI 命令（F-12 反馈回归） | 行内 `code` 与命令列不折行，`pre code` 保留换行和缩进；表格列宽随内容调整，外层容器限制宽度并允许横向滚动、键盘聚焦（静态规则检查，实际观感仍按 F-12 复核） | auto | `test_cli_layout.py::test_inline_code_does_not_wrap`、`test_cli_layout.py::test_command_column_does_not_wrap`、`test_cli_layout.py::test_commands_scroll_inside_wrapper` |
