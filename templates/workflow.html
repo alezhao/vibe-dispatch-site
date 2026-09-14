@@ -1,5 +1,135 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+  .workflow > section {
+    margin-block-start: 3rem;
+  }
+
+  .workflow .state-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem 2rem;
+  }
+
+  .workflow dt {
+    font-weight: 600;
+  }
+
+  .workflow dd {
+    margin: 0.5rem 0 0;
+  }
+
+  .workflow li + li,
+  .workflow .endings > section + section {
+    margin-block-start: 1.5rem;
+  }
+
+  .workflow code {
+    overflow-wrap: anywhere;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>工作流</h1>
+<article class="workflow">
+  <header>
+    <h1>工作流</h1>
+    <p>沙箱负责编码与自测，本机独立复跑验收，你负责复核改法。两跑都绿才进入待复核，合并永远是人按的。</p>
+  </header>
+
+  <section id="state-machine" aria-labelledby="state-machine-title">
+    <h2 id="state-machine-title">状态机：从派发到复核</h2>
+    <p>任务是否通过验收由验收命令的退出码决定，退出码 0 即通过，agent 自己说完成不作数。</p>
+    <h3>全部状态</h3>
+    <dl class="state-list">
+      <div>
+        <dt><code>queued</code></dt>
+        <dd>任务已登记，等待派发。</dd>
+      </div>
+      <div>
+        <dt><code>running</code></dt>
+        <dd>任务已派发，沙箱中的 agent 正在执行。</dd>
+      </div>
+      <div>
+        <dt><code>self-tested</code></dt>
+        <dd>沙箱内自测通过并推回产物，等待本机复跑。</dd>
+      </div>
+      <div>
+        <dt><code>awaiting-review</code></dt>
+        <dd>双跑验收通过，等待人复核改法。</dd>
+      </div>
+      <div>
+        <dt><code>merged</code></dt>
+        <dd>人复核后，已在 GitHub 上通过 PR 合并进基线，是终态。</dd>
+      </div>
+      <div>
+        <dt><code>failed</code></dt>
+        <dd>机器判定不通过；不是终态，可以人工重试。</dd>
+      </div>
+      <div>
+        <dt><code>rejected</code></dt>
+        <dd>人判定产出不合格并打回，是终态；可显式重试。</dd>
+      </div>
+      <div>
+        <dt><code>cancelled</code></dt>
+        <dd>用户主动叫停，是终态。</dd>
+      </div>
+    </dl>
+
+    <h3>状态迁移</h3>
+    <ul>
+      <li><code>dispatch</code>：从 <code>queued</code> 进入 <code>running</code>，起沙箱并交给 agent 执行任务。</li>
+      <li><code>collect</code>：沙箱内自测通过并推回分支后，从 <code>running</code> 进入 <code>self-tested</code>。</li>
+      <li><code>verify_locally</code>：本机独立复跑同一条验收命令，通过后从 <code>self-tested</code> 进入 <code>awaiting-review</code>；未通过则带着失败反馈进入自动修复回路。</li>
+      <li><code>merge</code>：人复核通过后，从 <code>awaiting-review</code> 进入 <code>merged</code>，在 GitHub 上开 PR 并合并已验收的提交。合并失败时保留待复核状态与验收产物。</li>
+      <li><code>reject</code>：人认为改法不对，从 <code>awaiting-review</code> 进入 <code>rejected</code>，打回理由必填。</li>
+      <li><code>cancel</code>：任何尚未结束的状态都可叫停，进入 <code>cancelled</code>，释放沙箱；理由可选。合并请求正在进行时，不能用取消撤回远端操作。</li>
+      <li><code>retry</code>：人工将 <code>failed</code> 或 <code>rejected</code> 放回 <code>queued</code>，沿用原 id 和原任务描述，携带失败反馈，并重置自动修复预算。</li>
+    </ul>
+  </section>
+
+  <section class="endings" aria-labelledby="endings-title">
+    <h2 id="endings-title">三种不成功的结局</h2>
+    <p><code>merged</code>、<code>rejected</code>、<code>cancelled</code> 是终态，后台线程迟到的状态更新不能改写人的决定。人工对 <code>rejected</code> 显式执行 <code>retry</code>，则会开启新一轮尝试。</p>
+
+    <section id="ending-failed" aria-labelledby="ending-failed-title">
+      <h3 id="ending-failed-title"><code>failed</code>：机器判定不通过</h3>
+      <p>测试挂了、本机复跑没过等失败会先经过自动修复回路，两个预算都用完仍未通过才需要人看。它不是终态：人工 <code>retry</code> 可以重新开始，并给一份新的自动修复预算。</p>
+    </section>
+
+    <section id="ending-rejected" aria-labelledby="ending-rejected-title">
+      <h3 id="ending-rejected-title"><code>rejected</code>：人判定不合格</h3>
+      <p>dev lead 看过产出，认为改法不对；测试全绿也可能被打回。打回是终态，<code>reject</code> 的理由必填。之后可用 <code>retry</code> 沿用原任务重跑；若要修改任务描述，当前没有编辑接口，需要重新 <code>submit</code>。</p>
+    </section>
+
+    <section id="ending-cancelled" aria-labelledby="ending-cancelled-title">
+      <h3 id="ending-cancelled-title"><code>cancelled</code>：用户主动叫停</h3>
+      <p>任务根本没跑完，用户决定不再继续，沙箱当场释放、停止计费。失败是结果，取消是决定；取消属于终态，后台迟到的更新不能把任务改回运行中。<code>cancel</code> 的理由可选。</p>
+    </section>
+  </section>
+
+  <section id="auto-fix" aria-labelledby="auto-fix-title">
+    <h2 id="auto-fix-title">自动修复回路：失败是下一轮的输入</h2>
+    <ol>
+      <li><strong>同一沙箱内修复。</strong>沙箱内自测没过，不销毁沙箱，而是把测试输出（不只是退出码）作为「上一轮反馈」交回 agent，在同一棵工作树上接着修。<code>VIBE_FIX_ROUNDS</code> 默认 <strong>3</strong> 轮，不必重开沙箱或重装依赖。</li>
+      <li><strong>带反馈整链重跑。</strong>沙箱内修复轮用完，或本机复跑失败、沙箱已经释放，就带着累计反馈重跑整条链。<code>VIBE_MAX_ATTEMPTS</code> 默认 <strong>5</strong> 次；修复轮用完后的反馈会明确要求换思路。本机 worktree 模式下起点会挪到 agent 的提交，改动不丢。</li>
+      <li><strong>预算耗尽后交给人。</strong>两个预算都用完仍未通过，任务进入 <code>failed</code>。用 <code>vibe show</code> 看第几次尝试、已修几轮及逐条失败记录，再用 <code>retry -m</code> 补充线索并重置预算，或拆小任务重新派发。</li>
+    </ol>
+    <p>换了沙箱不等于失忆：每次失败的阶段、错误、测试输出、agent 日志和当时的 diff 都随任务记录保存，新沙箱中的 agent 开工前会读取这份历史。</p>
+    <p>基础设施故障不应当作 agent 的验收失败：clone、装依赖、连接或推送等 <code>infra</code> 故障不进 agent 反馈、不耗 agent 预算，使用独立的 <code>infra_retries</code>（默认 3）。连续 3 个任务栽在基础设施上会熔断，应先排查修好，再用 <code>vibe resume</code> 放行。</p>
+  </section>
+
+  <section id="double-run" aria-labelledby="double-run-title">
+    <h2 id="double-run-title">双跑验收：同一提交，两个环境</h2>
+    <p>同一条验收命令在沙箱和本机各跑一次，两次都过才进入 <code>awaiting-review</code>。沙箱内自测通过只证明「在那个环境里能过」，不是合并许可。</p>
+    <ol>
+      <li><strong>沙箱自测并锁定产物。</strong>记录产物的 <code>commit_sha</code> 和基线的 <code>base_sha</code>，后续复跑、复核与合并都以记录中的提交为准。</li>
+      <li><strong>本机独立复跑。</strong>重新克隆到临时目录，检出同一个提交，再跑同一条验收命令。本机 worktree 模式也使用独立临时 clone，不直接复用任务工作区；跑完删除临时目录。两侧均使用 Bash 并启用 <code>pipefail</code>，避免管道中间的失败被掩盖。</li>
+      <li><strong>人复核已验收的改动。</strong>复核 diff 使用记录中的两端 SHA，合并只接受已经验收的 <code>commit_sha</code>，不跟随分支后来新增的提交。分支多了未经验收的提交会被拒绝合并。</li>
+    </ol>
+    <p>这一步用于抓「疑似环境特异性假绿」：沙箱里碰巧存在的依赖、构建产物或环境变量，可能让沙箱绿而本机红。两跑的完整输出都保存在任务记录中，可用 <code>vibe show</code> 查看；本机失败也会作为自动修复反馈。</p>
+    <p>锁定提交保证的是产物身份一致，不等于已经验证产物与最新主干组合后的全部行为。两跑通过后，仍然需要人判断改法是否正确。</p>
+  </section>
+</article>
 {% endblock %}
