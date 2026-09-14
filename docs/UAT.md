@@ -98,3 +98,4 @@
 | F-11 | 内容不受影响 | A–E 全部 `auto` 条目仍绿（F 只能改 `static/style.css`、`templates/base.html`、`static/fonts/`，各页模板只允许加 class / 结构包裹，不改文字）；每页仍只引用一份 `static/style.css`，不得另开样式表绕过 token 检查 | auto | 全量 `pytest -q`；`test_design.py::test_every_page_links_same_stylesheet_only` |
 | F-12 | dev lead 复核观感 | 1280px 与 390px 宽度截图：无横向滚动、导航可点、hero / 卡片 / 代码块层次清晰、字体确实为 Inter / JetBrains Mono（DevTools 检查 rendered fonts） | manual | 复核时截图贴在 VIB-12 评论 ⬜ |
 | F-13 | 访客在线访问 | Pages 部署成功后线上样式生效（`static/fonts/*.woff2` 200） | manual | 合并后 curl ⬜ |
+| F-14 | 访客在窄屏读 CLI 命令（F-12 反馈回归） | 行内 `code` 与命令列不折行，`pre code` 保留换行和缩进；表格列宽随内容调整，外层容器限制宽度并允许横向滚动、键盘聚焦（静态规则检查，实际观感仍按 F-12 复核） | auto | `test_cli_layout.py::test_inline_code_does_not_wrap`、`test_cli_layout.py::test_command_column_does_not_wrap`、`test_cli_layout.py::test_commands_scroll_inside_wrapper` |

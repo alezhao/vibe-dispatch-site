@@ -166,6 +166,7 @@ pre {
 }
 
 code {
+  white-space: nowrap;
   padding: 0.15em 0.4em;
   border-radius: 0.3rem;
   background: var(--color-surface);
@@ -191,6 +192,7 @@ pre {
 }
 
 pre code {
+  white-space: pre;
   padding: 0;
   border-radius: 0;
   background: var(--color-surface);
@@ -322,9 +324,14 @@ pre code {
   border-radius: var(--radius);
 }
 
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .commands {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
   border-collapse: separate;
   border-spacing: 0;
   margin-block: 2rem;
@@ -351,6 +358,7 @@ pre code {
 
 .commands th:first-child {
   width: 12rem;
+  white-space: nowrap;
 }
 
 .commands thead {
@@ -366,7 +374,6 @@ pre code {
 }
 
 .commands tbody th {
-  white-space: normal;
   font-weight: 400;
 }
 
