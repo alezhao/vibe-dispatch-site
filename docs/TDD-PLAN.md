@@ -1,7 +1,9 @@
 # vibe-dispatch 门户站：TDD 计划
 
 这是 [vibe-dispatch](https://github.com/alezhao/vibe-dispatch) 的门户网站，同时也是用 vibe-dispatch 本身派发开发的一次端到端试跑。
-**测试先于实现写好并提交**（`tests/`），每个任务的目标就是让指定的测试文件变绿。agent 开工前必读本文与对应测试。
+**测试先于实现写好并提交**（`tests/`），每个任务的目标就是让指定的测试文件变绿。agent 开工前必读本文、[`docs/UAT.md`](UAT.md) 里对应里程碑的验收条目，以及对应测试。
+
+验收分两层：`docs/UAT.md` 是**用户视角的验收清单**（每条一个场景 + 判定标准，标注 auto / manual），`tests/` 是其中 auto 条目的**单元测试实现**；`tests/test_uat_traceability.py` 保证两者一一对应。
 
 ## 技术栈与约束
 
@@ -34,6 +36,9 @@
 | C 快速开始 + CLI 参考 | `feat/quickstart-cli` | `tests/test_quickstart.py` `tests/test_cli_page.py` | `… tests/test_build.py tests/test_quickstart.py tests/test_cli_page.py` | A |
 | D 工作流页 | `feat/workflow-page` | `tests/test_workflow.py` | `… tests/test_build.py tests/test_workflow.py` | A |
 | E GitHub Pages 部署 | `feat/pages-deploy` | `tests/test_pages_workflow.py` | `uv run --no-sync python -m pytest -q tests/test_pages_workflow.py` | — |
+| F 视觉设计 | `paperclip/vib-12` | `tests/test_design.py`（UAT F-1…F-11） | `uv run --no-sync python -m pytest -q`（全量：内容测试不得回退） | A–E |
+
+F 的设计方向与约束见 `docs/UAT.md` 里程碑 F：开发者工具风、只做深色、自托管 Inter + JetBrains Mono（文件已在 `static/fonts/`）、零 JS、零外部请求、颜色全部走 `:root` token。F 可以改 `static/style.css`、`templates/base.html`、`static/fonts/`；各页模板只允许加 class 或结构包裹，不改任何文字（A–E 的内容测试会守住）。F-12 / F-13 为人工复核项。
 
 A 先做：它要让四个页面都能生成（内容可以是占位标题，但骨架、导航、链接检查必须过）。A 合并后 B / C / D / E 并行，各自只改自己的模板（B: `templates/index.html`，C: `templates/quickstart.html` + `templates/cli.html`，D: `templates/workflow.html`，E: `.github/workflows/pages.yml`），**不改 `portal/build.py`、`templates/base.html`、`static/style.css` 和任何测试**。
 
