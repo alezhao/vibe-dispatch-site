@@ -1,0 +1,15 @@
+# vibe-dispatch 运行状态（worktree / 任务记录），不进仓库
+.vibe/
+
+# 构建产物
+dist/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 系统 / 编辑器
+.DS_Store
+.vscode/

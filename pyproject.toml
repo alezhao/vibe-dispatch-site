@@ -1,0 +1,23 @@
+[project]
+name = "vibe-dispatch-site"
+version = "0.1.0"
+description = "vibe-dispatch 门户网站：Jinja2 模板生成的静态站"
+requires-python = ">=3.10"
+dependencies = [
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "beautifulsoup4>=4.12",
+    "pyyaml>=6",
+]
+
+[tool.uv]
+# 纯脚本项目：uv sync 只装依赖，不把本项目当包安装
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
