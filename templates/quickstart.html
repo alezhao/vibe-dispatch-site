@@ -1,5 +1,75 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+  .steps {
+    padding-left: 1.5rem;
+  }
+
+  .steps > li {
+    padding-left: .5rem;
+    margin-bottom: 2rem;
+  }
+
+  .steps > li::marker {
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  .setup-note {
+    padding: 1.5rem;
+    border-left: .25rem solid #1d4ed8;
+    border-radius: .375rem;
+    background: #e2e8f0;
+  }
+
+  .setup-note > :last-child {
+    margin-bottom: 0;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <h1>快速开始</h1>
+<p>从安装、启动演示服务，到派发任务、查看结果与人工复核，走一遍 vibe-dispatch 的使用流程。</p>
+
+<ol class="steps">
+  <li>
+    <h2>安装开发依赖</h2>
+    <p>准备 Python 3.10+，在 <a href="https://github.com/alezhao/vibe-dispatch">vibe-dispatch</a> 源码目录执行：</p>
+    <pre><code>pip install -e ".[dev]"</code></pre>
+  </li>
+  <li>
+    <h2>启动演示服务</h2>
+    <p>在终端 1 启动常驻服务。演示模式使用假 provider 和预置任务，不碰云资源，也不产生费用。</p>
+    <pre><code>vibe serve --demo</code></pre>
+    <p>后续提交与合并在 demo 中只作演练。真实派发前，先结束 demo，配置好对应后端的凭据与运行环境，再用 <code>vibe serve</code>（默认 ACA）或 <code>vibe serve --backend local-docker</code> 启动服务。</p>
+  </li>
+  <li>
+    <h2>提交任务与验收命令</h2>
+    <p>另开终端 2，以文档中的仓库和新分支为例提交任务。<code>-a</code> 必填：是否完成由验收命令的退出码决定，退出码 0 即通过，而不是由 agent 自述决定。</p>
+    <pre><code>vibe submit "为任务列表接口增加分页" \
+  -r alezhao/vibe-dispatch -b feat/pagination \
+  --setup "uv sync --extra dev" \
+  -a "uv run python -m pytest -q"</code></pre>
+    <p>默认提交后立即派发；记下返回的任务 ID。准备命令与验收命令配套使用，<code>--setup</code> 的必要性见下方说明。</p>
+  </li>
+  <li>
+    <h2>查看结果，复核后合并</h2>
+    <p>列出任务，再查看详情与 diff。将示例中的 <code>1dac</code> 替换为实际任务 ID 或可识别前缀。</p>
+    <pre><code>vibe ls
+vibe show 1dac -d
+vibe merge 1dac</code></pre>
+    <p>不要直接连续执行到合并：先等待沙箱与本机的双跑验收通过、任务进入 <code>awaiting-review</code>，再人工查看 diff。真实派发模式下，确认产出符合预期后执行 <code>vibe merge</code>，在 GitHub 开 PR 并合并已验收的提交到基线。</p>
+  </li>
+</ol>
+
+<section class="setup-note" aria-labelledby="setup-heading">
+  <h2 id="setup-heading">本例中，为什么 <code>--setup</code> 必填？</h2>
+  <p>沙箱里只有裸 <code>python3</code>，没有 pip、没有 pytest。运行本例这样的测试类验收，不先准备依赖，验收命令会以 <code>command not found</code> 告终；这个非零退出码看上去和测试失败一样，并不意味着测试真正运行过。</p>
+  <p>因此，本例必须通过 <code>--setup</code> 准备验收环境。这是运行测试的环境要求，不是所有 <code>vibe submit</code> 都强制要求此参数。按原文建议用 <code>uv sync --extra dev</code> 建立项目虚拟环境，再用 <code>uv run python -m pytest -q</code> 验收。</p>
+  <p>准备命令在沙箱执行，本机未指定 <code>--local-setup</code> 时也沿用 <code>--setup</code>。避免用 <code>uv pip install --system</code> 写入系统目录：沙箱中的非特权用户会遇到权限错误。</p>
+</section>
+
+<p>下一步：查看 <a href="cli.html">CLI 参考</a>，或了解 <a href="workflow.html">工作流</a>。</p>
 {% endblock %}

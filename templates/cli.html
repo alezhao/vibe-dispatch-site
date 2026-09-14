@@ -1,5 +1,107 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+  .commands {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .commands caption {
+    margin-bottom: 1rem;
+    text-align: left;
+    font-weight: 700;
+  }
+
+  .commands th,
+  .commands td {
+    padding: 1rem;
+    border-bottom: 1px solid #cbd5e1;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .commands thead {
+    background: #e2e8f0;
+  }
+
+  .commands tbody th {
+    white-space: nowrap;
+    font-weight: 400;
+  }
+
+  @media (max-width: 40rem) {
+    .commands th,
+    .commands td {
+      padding: .75rem .5rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <h1>CLI 参考</h1>
+<p>常用子命令速查。具体参数以 <code>vibe &lt;子命令&gt; --help</code> 为准；首次使用可先按 <a href="quickstart.html">快速开始</a> 演练。</p>
+
+<table class="commands">
+  <caption>十二个子命令：从环境检查到任务复核</caption>
+  <thead>
+    <tr>
+      <th scope="col">命令</th>
+      <th scope="col">说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row"><code>vibe doctor</code></th>
+      <td>检查宿主工具、缓存与认证等环境条件。<code>--repo owner/name</code> 加查仓库可达性；<code>--sandbox</code> 会真实创建沙箱、执行命令再销毁。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe serve</code></th>
+      <td>启动常驻服务，任务执行留在服务端。<code>--demo</code> 使用假 provider 和预置任务；真实后端默认为 <code>azure-aca-sandbox</code>，也可用 <code>--backend local-docker</code>。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe submit</code></th>
+      <td>提交任务描述，用 <code>-r</code> 指定仓库、<code>-b</code> 指定新分支，必填的 <code>-a</code> 指定验收命令。<code>--setup</code> 准备验收环境，测试类验收需先安装依赖；本机可用 <code>--local-setup</code> 覆盖准备命令。默认立即派发，<code>--no-start</code> 只登记任务。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe ls</code></th>
+      <td>列出任务及状态。<code>-w</code> 持续刷新，<code>-s &lt;状态&gt;</code> 按状态筛选。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe show</code></th>
+      <td>按任务 ID 或前缀查看详情、双跑验收结论与 SHA。<code>-d</code>（<code>--diff</code>）查看固定验收 SHA 的三点 diff，供人工复核。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe logs</code></th>
+      <td>查看任务详细日志全文，包括阶段计时、agent 动作、验收与失败输出。<code>-n 50</code> 查看末尾 50 行，<code>-f</code> 跟随日志并在任务停下后自动退出。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe run</code></th>
+      <td>启动排队任务，配合 <code>vibe submit --no-start</code> 使用；重跑失败任务应使用 <code>vibe retry</code>。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe retry</code></th>
+      <td>重跑 <code>failed</code> 或 <code>rejected</code> 的任务，沿用原任务 ID 与描述，重置自动修复预算。可用 <code>-m</code> 补充反馈，旧失败原因与输出也会交给 agent。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe cancel</code></th>
+      <td>用户主动叫停任务，释放沙箱并停止计费。取消理由可选，用 <code>-m</code> 提供。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe merge</code></th>
+      <td>人工复核通过后，在 GitHub 为任务分支开 PR 并合并到基线，只合并已经验收的提交。本机 worktree 模式下还会尝试快进本机基线；合并失败会保留待复核产物，可修复原因后再次执行。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe reject</code></th>
+      <td>人工判定产出不合格并打回，即使测试全绿也可拒绝。拒绝理由必填，使用 <code>-m &lt;理由&gt;</code> 记录，作为后续反馈。</td>
+    </tr>
+    <tr>
+      <th scope="row"><code>vibe resume</code></th>
+      <td>基础设施连续失败触发熔断后，先修复基础设施，再恢复排队任务派发；不是恢复单个已取消的任务。</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>任务状态、双跑验收与自动修复的关系，见 <a href="workflow.html">工作流</a>。</p>
 {% endblock %}
