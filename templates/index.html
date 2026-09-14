@@ -1,5 +1,138 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+  .home section + section {
+    margin-top: 3rem;
+  }
+
+  .home .hero p {
+    max-width: 46rem;
+  }
+
+  .home .tagline {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 600;
+  }
+
+  .home .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .home .cta {
+    display: inline-block;
+    padding: 0.65rem 1.25rem;
+    border-radius: 0.5rem;
+    background: #1d4ed8;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .home .cta:hover {
+    background: #1e40af;
+  }
+
+  .home .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
+  }
+
+  .home .feature {
+    padding: 1.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    background: #fff;
+  }
+
+  .home .feature h3 {
+    margin-top: 0;
+  }
+
+  .home .feature p {
+    margin-bottom: 0;
+  }
+
+  .home .state-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .home .state-list dd {
+    margin: 0;
+  }
+
+  @media (max-width: 40rem) {
+    .home .state-list {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+
+    .home .state-list dd {
+      margin-bottom: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>vibe-dispatch</h1>
+<div class="home">
+  <section class="hero" aria-labelledby="hero-title">
+    <h1 id="hero-title">vibe-dispatch</h1>
+    <p class="tagline">多任务分派的 vibe coding 开发平台</p>
+    <p>本机是 dev lead：把任务派到互不可见的隔离沙箱，由 agent 独立编码、自测并推回 GitHub；本机负责复跑验收、复核，然后合并或打回。本机不跑 agent，合并由人决定。</p>
+    <div class="actions">
+      <a class="cta" href="quickstart.html">快速开始</a>
+      <a href="https://github.com/alezhao/vibe-dispatch">在 GitHub 查看源码</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="features-title">
+    <h2 id="features-title">从派发到复核</h2>
+    <div class="features">
+      <article class="feature">
+        <h3>双跑验收</h3>
+        <p>沙箱内自测通过后，本机在独立的临时 clone 中检出同一个 <code>commit_sha</code>，复跑同一条验收命令。两跑都过才进入待复核，agent 自己说完成不作数。</p>
+      </article>
+      <article class="feature">
+        <h3>自动修复回路</h3>
+        <p>沙箱内自测没过，测试输出作为反馈交回 agent，在同一棵工作树上继续修；修复轮用完则带着累计反馈整链重跑。修复轮数与尝试次数都有预算，新沙箱也能读到失败历史。</p>
+      </article>
+      <article class="feature">
+        <h3>本机 worktree 模式</h3>
+        <p>指定 <code>--local-repo</code>，为每个任务创建独立的 Git worktree 与新分支，通过 GitHub 交给沙箱，再回收到对应 worktree。输入是本机基线已提交的版本，原目录未提交、未跟踪的文件不会被打包或修改。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="states" aria-labelledby="states-title">
+    <h2 id="states-title">任务状态一览</h2>
+    <dl class="state-list">
+      <dt><code>queued</code></dt>
+      <dd>任务已登记，等待派发。</dd>
+      <dt><code>running</code></dt>
+      <dd>任务正在沙箱中执行。</dd>
+      <dt><code>self-tested</code></dt>
+      <dd>沙箱内自测通过，等待本机复跑验收。</dd>
+      <dt><code>awaiting-review</code></dt>
+      <dd>双跑验收通过，等待 dev lead 复核、合并或打回。</dd>
+      <dt><code>merged</code></dt>
+      <dd>复核通过，已在 GitHub 上通过 PR 合并进基线。</dd>
+      <dt><code>failed</code></dt>
+      <dd>机器判定不通过；不是终态，可人工重试。</dd>
+      <dt><code>rejected</code></dt>
+      <dd>人判定产出不合格，填写理由后打回；测试全绿也可能被打回。</dd>
+      <dt><code>cancelled</code></dt>
+      <dd>用户主动叫停任务，而不是任务运行失败。</dd>
+    </dl>
+    <p>merged、rejected、cancelled 是终态，后台迟到的更新不能改写它们。</p>
+    <p><a href="workflow.html">了解状态流转与复核工作流</a></p>
+  </section>
+</div>
 {% endblock %}
