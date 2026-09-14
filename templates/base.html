@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>{{ title }} · vibe-dispatch</title>
-  <link rel="stylesheet" href="static/style.css">
+  <link rel="preload" href="static/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   {% block head %}{% endblock %}
+  {# 共享主题后加载，覆盖各页保留的旧样式。 #}
+  <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
   <header class="site-header">
@@ -17,7 +20,7 @@
       </ul>
     </nav>
   </header>
-  <main class="container">
+  <main class="container{% if current_page != 'index' %} docs{% endif %}">
     {% block content %}{% endblock %}
   </main>
   <footer class="site-footer">
